@@ -1,86 +1,57 @@
 package com.qwaserand.preguntados.controller;
 
+import com.qwaserand.preguntados.dto.request.PreguntaRequestDTO;
 import com.qwaserand.preguntados.entity.Pregunta;
-import com.qwaserand.preguntados.repository.PreguntaRepository;
+import com.qwaserand.preguntados.service.PreguntaService;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/preguntados")
 public class PreguntaController {
 
     @Autowired
-    PreguntaRepository preguntaRepository;
+    private PreguntaService preguntaService;
 
+    @Operation(summary = "Obtener todas las preguntas existentes")
     @GetMapping
-    public ResponseEntity<?> getAll() {
-        List<Pregunta> preguntas = preguntaRepository.findAll();
-
-        String result = preguntas.stream()
-                .map(Pregunta::getEnunciado)
-                .collect(Collectors.joining("\n"));
-        return new ResponseEntity<>(result, HttpStatus.OK);
+    public ResponseEntity<?> getAll(Pageable pageable) {
+        Page<Pregunta> preguntas = preguntaService.getAll(pageable);
+        return new ResponseEntity<>(preguntas, HttpStatus.OK);
     }
 
+    @Operation(summary = "Obtener una pregunta")
     @GetMapping("/{id}")
-    public ResponseEntity<?> getOne(@PathVariable("id") Long id) {
-        Optional<Pregunta> preguntaOptional = preguntaRepository.findById(id);
-
-        if (preguntaOptional.isPresent()) {
-            return new ResponseEntity<>(preguntaOptional.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<?> getOne(@PathVariable(name = "id") Long idPregunta) {
+        Pregunta pregunta = preguntaService.getOne(idPregunta);
+            return new ResponseEntity<>(pregunta, HttpStatus.OK);
     }
 
+    @Operation(summary = "Crear una pregunta") //Anotacion de Swagger, proporciona metadatos sobre un endpoint
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody Pregunta pregunta) {
-        try {
-            Pregunta preguntaCreada = preguntaRepository.save(new Pregunta(
-                    pregunta.getId(),
-                    pregunta.getEnunciado()
-                )
-            );
-
+    public ResponseEntity<?> create(@Valid @RequestBody PreguntaRequestDTO preguntaRequestDTO) {
+            Pregunta preguntaCreada = preguntaService.create(preguntaRequestDTO);
             return new ResponseEntity<>(preguntaCreada, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
     }
 
+    @Operation(summary = "Editar una pregunta")
     @PutMapping("/{id}")
-    public ResponseEntity<Pregunta> update(@PathVariable("id") Long id, @RequestBody Pregunta pregunta) {
-
-        Optional<Pregunta> preguntaOptional = preguntaRepository.findById(id);
-
-        if (preguntaOptional.isPresent()) {
-
-            Pregunta updatedPregunta = preguntaOptional.get();
-
-            updatedPregunta.setEnunciado(pregunta.getEnunciado());
-
-            return new ResponseEntity<>(preguntaRepository.save(updatedPregunta), HttpStatus.OK);
-
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<?> update(@Valid @RequestBody PreguntaRequestDTO preguntaRequestDTO,
+                                    @PathVariable(name = "id") Long idPregunta) {
+            Pregunta pregunta = preguntaService.update(preguntaRequestDTO, idPregunta);
+            return new ResponseEntity<>(pregunta, HttpStatus.OK);
     }
 
+    @Operation(summary = "Eliminar una pregunta")
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Long id) {
-
-        try{
-            preguntaRepository.deleteById(id);
+    public ResponseEntity<?> delete(@PathVariable(name = "id") Long idPregunta) {
+            preguntaService.delete(idPregunta);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 }
