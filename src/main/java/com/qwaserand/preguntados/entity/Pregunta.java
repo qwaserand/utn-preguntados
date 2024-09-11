@@ -8,9 +8,10 @@ public class Pregunta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_pregunta")
     private long id;
 
-    @Column(name = "statement")
+    @Column(name = "statement", nullable = false)
     private String enunciado;
 
     /*----------------------------------------------------------------------------*/
@@ -18,6 +19,10 @@ public class Pregunta {
     public Pregunta() {
     }
 
+    /**
+     * @param id
+     * @param enunciado
+     * */
     public Pregunta(long id, String enunciado) {
         this.id = id;
         this.enunciado = enunciado;
