@@ -45,4 +45,7 @@ public class Pregunta {
     public void setEnunciado(String enunciado) {
         this.enunciado = enunciado;
     }
+
+    public void agregarRespuesta(Respuesta respuesta) {
+    }
 }
